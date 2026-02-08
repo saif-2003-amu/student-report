@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Test & Annual Report Manager</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
+    h1, h2 { color:#333; }
+    .card { background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:20px; }
+    label { display:block; margin-top:10px; }
+    input, select, button { padding:8px; margin-top:5px; width:100%; }
+    button { background:#2563eb; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-top:15px; }
+    button:hover { background:#1e40af; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+    th { background:#e5e7eb; }
+  </style>
+</head>
+<body>
+
+<h1>📘 Student Test & Annual Report System</h1>
+
+<div class="card">
+  <h2>Add Student Test Report</h2>
+  <label>Student Name</label>
+  <input type="text" id="name" />
+
+  <label>Class</label>
+  <input type="text" id="class" />
+
+  <label>Subject</label>
+  <input type="text" id="subject" />
+
+  <label>Test Name</label>
+  <input type="text" id="test" />
+
+  <label>Marks Obtained</label>
+  <input type="number" id="marks" />
+
+  <label>Maximum Marks</label>
+  <input type="number" id="maxmarks" />
+
+  <button onclick="saveReport()">Save Test Report</button>
+</div>
+
+<div class="card">
+  <h2>View Annual Report</h2>
+  <label>Select Student</label>
+  <select id="studentSelect" onchange="generateReport()"></select>
+
+  <table id="reportTable">
+    <thead>
+      <tr>
+        <th>Subject</th>
+        <th>Test</th>
+        <th>Marks</th>
+        <th>Max Marks</th>
+        <th>Percentage</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3 id="finalResult"></h3>
+</div>
+
+<script>
+  let data = JSON.parse(localStorage.getItem('reports')) || [];
+
+  function saveReport() {
+    const report = {
+      name: document.getElementById('name').value,
+      className: document.getElementById('class').value,
+      subject: document.getElementById('subject').value,
+      test: document.getElementById('test').value,
+      marks: Number(document.getElementById('marks').value),
+      max: Number(document.getElementById('maxmarks').value)
+    };
+
+    data.push(report);
+    localStorage.setItem('reports', JSON.stringify(data));
+    alert('Test report saved');
+    loadStudents();
+  }
+
+  function loadStudents() {
+    const select = document.getElementById('studentSelect');
+    select.innerHTML = '<option value="">--Select--</option>';
+    const students = [...new Set(data.map(r => r.name))];
+    students.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      select.appendChild(opt);
+    });
+  }
+
+  function generateReport() {
+    const student = document.getElementById('studentSelect').value;
+    const tbody = document.querySelector('#reportTable tbody');
+    tbody.innerHTML = '';
+
+    let totalMarks = 0, totalMax = 0;
+
+    data.filter(r => r.name === student).forEach(r => {
+      const tr = document.createElement('tr');
+      const perc = ((r.marks / r.max) * 100).toFixed(2);
+      tr.innerHTML = `<td>${r.subject}</td><td>${r.test}</td><td>${r.marks}</td><td>${r.max}</td><td>${perc}%</td>`;
+      tbody.appendChild(tr);
+      totalMarks += r.marks;
+      totalMax += r.max;
+    });
+
+    if (totalMax > 0) {
+      const finalPerc = ((totalMarks / totalMax) * 100).toFixed(2);
+      document.getElementById('finalResult').innerText = `Annual Percentage: ${finalPerc}%`;
+    }
+  }
+
+  loadStudents();
+</script>
+
+</body>
+</html>

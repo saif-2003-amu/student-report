@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Performance Report with PDF</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f3f4f6; padding:20px; }
+    h1, h2 { color:#111827; }
+    .card { background:#fff; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    input, button { padding:8px; margin-top:8px; width:100%; }
+    button { background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+    th { background:#e5e7eb; }
+  </style>
+</head>
+<body>
+
+<h1>📊 Student Performance & PDF Report System</h1>
+
+<div class="card">
+  <h2>Add Test Data</h2>
+  <input id="name" placeholder="Student Name">
+  <input id="date" type="date">
+  <input id="marks" type="number" placeholder="Marks Obtained">
+  <input id="total" type="number" placeholder="Total Marks">
+  <button onclick="addData()">Save Test</button>
+</div>
+
+<div class="card" id="report">
+  <h2 id="studentTitle"></h2>
+  <canvas id="accuracyChart"></canvas>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Marks</th>
+        <th>Total</th>
+        <th>Accuracy (%)</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<button onclick="downloadPDF()">⬇️ Download PDF Report</button>
+
+<script>
+let records = JSON.parse(localStorage.getItem('performance')) || [];
+let chart;
+
+function addData() {
+  const name = document.getElementById('name').value;
+  const date = document.getElementById('date').value;
+  const marks = Number(document.getElementById('marks').value);
+  const total = Number(document.getElementById('total').value);
+
+  records.push({ name, date, marks, total });
+  localStorage.setItem('performance', JSON.stringify(records));
+  generateReport(name);
+}
+
+function generateReport(student) {
+  const data = records.filter(r => r.name === student);
+  document.getElementById('studentTitle').innerText = `Annual Performance Report: ${student}`;
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  const labels = [];
+  const accuracy = [];
+
+  data.forEach(r => {
+    const acc = ((r.marks / r.total) * 100).toFixed(2);
+    labels.push(r.date);
+    accuracy.push(acc);
+
+    tbody.innerHTML += `<tr><td>${r.date}</td><td>${r.marks}</td><td>${r.total}</td><td>${acc}%</td></tr>`;
+  });
+
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('accuracyChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Accuracy % vs Time', data: accuracy, borderWidth: 2 }]
+    },
+    options: {
+      scales: { y: { min: 0, max: 100 } }
+    }
+  });
+}
+
+function downloadPDF() {
+  const element = document.getElementById('report');
+  html2pdf().from(element).save('Student_Report.pdf');
+}
+</script>
+
+</body>
+</html>
